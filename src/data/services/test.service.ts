@@ -1,7 +1,8 @@
 import { INestApplication, Injectable } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { TypeOrmModule, TypeOrmModuleOptions, TypeOrmOptionsFactory } from "@nestjs/typeorm";
-import request = require('supertest');
+import request from 'supertest';
+//import request = require('supertest');
 import { AppModule } from "../../app.module";
 
 @Injectable()

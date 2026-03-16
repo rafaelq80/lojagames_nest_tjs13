@@ -1,5 +1,6 @@
 import { INestApplication } from '@nestjs/common';
-import request = require('supertest');
+import request from 'supertest';
+//import request = require('supertest');
 import { createTestingApp, authenticateUser, authHeader } from '../src/data/services/test.service';
 
 
@@ -23,11 +24,27 @@ describe('Testes do Módulo Produto (e2e)', () => {
     app = await createTestingApp();
     token = await authenticateUser(app);
 
-    // Criar categoria para testar o módulo
+    // Cria uma categoria para testar o módulo
     await request(app.getHttpServer())
       .post('/categorias')
       .set(authHeader(token))
-      .send({ tipo: 'E-Sports' });
+      .send({ tipo: 'E-Simulação' });
+
+    // Cria um novo produto e captura o ID
+      const resposta = await request(app.getHttpServer())
+        .post('/produtos')
+        .set(authHeader(token))
+        .send({
+          nome: 'Valorant',
+          preco: 350.99,
+          foto: '-',
+          categoria: {
+            id: 1,
+          },
+        });
+        
+      produtoId = resposta.body.id;
+
   });
 
   afterAll(async () => {
@@ -39,34 +56,37 @@ describe('Testes do Módulo Produto (e2e)', () => {
       .post('/produtos')
       .set(authHeader(token))
       .send(produto);
+
     expect(resposta.status).toBe(201);
 
-    produtoId = resposta.body.id;
   });
 
   it('02 - Deve Listar todos os Produtos', async () => {
-    return request(app.getHttpServer())
+    const resposta = await request(app.getHttpServer())
       .get('/produtos')
-      .set(authHeader(token))
-      .expect(200);
+      .set(authHeader(token));
+
+      expect(resposta.status).toBe(200);
   });
 
   it('03 - Deve Listar um Produto pelo ID', async () => {
-    return request(app.getHttpServer())
+    const resposta = await request(app.getHttpServer())
       .get(`/produtos/${produtoId}`)
-      .set(authHeader(token))
-      .expect(200);
+      .set(authHeader(token));
+
+      expect(resposta.status).toBe(200);
   });
 
   it('04 - Deve Listar todos os Produtos pelo nome', async () => {
-    return request(app.getHttpServer())
+    const resposta = await request(app.getHttpServer())
       .get(`/produtos/nome/${produto.nome}`)
-      .set(authHeader(token))
-      .expect(200);
+      .set(authHeader(token));
+
+      expect(resposta.status).toBe(200);
   });
 
   it('05 - Deve Atualizar um Produto', async () => {
-    return request(app.getHttpServer())
+    const resposta = await request(app.getHttpServer())
       .put('/produtos')
       .set(authHeader(token))
       .send({
@@ -77,18 +97,34 @@ describe('Testes do Módulo Produto (e2e)', () => {
         categoria: {
           id: 1,
         },
-      })
-      .expect(200)
-      .then(resposta => {
-        expect(resposta.body.nome).toEqual('Tomb Raider');
       });
+      
+      expect(resposta.status).toBe(200);
+      expect(resposta.body.nome).toEqual('Tomb Raider');
   });
 
   it('06 - Deve Deletar um Produto', async () => {
-    return request(app.getHttpServer())
+    const resposta = await request(app.getHttpServer())
       .delete(`/produtos/${produtoId}`)
-      .set(authHeader(token))
-      .expect(204);
+      .set(authHeader(token));
+
+      expect(resposta.status).toBe(204);
+  });
+
+  it('07 - Deve Listar os Produtos com preço maior do que o valor informado', async () => {
+    const resposta = await request(app.getHttpServer())
+      .get(`/produtos/preco_maior/250.00`)
+      .set(authHeader(token));
+
+      expect(resposta.status).toBe(200);
+  });
+
+  it('08 - Deve Listar os Produtos com preço menor do que o valor informado', async () => {
+    const resposta = await request(app.getHttpServer())
+      .get(`/produtos/preco_menor/260.00`)
+      .set(authHeader(token));
+
+      expect(resposta.status).toBe(200);
   });
 
 });

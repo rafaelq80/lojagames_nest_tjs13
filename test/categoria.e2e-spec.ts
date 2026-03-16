@@ -1,5 +1,6 @@
 import { INestApplication } from '@nestjs/common';
-import request = require('supertest');
+import request from 'supertest';
+//import request = require('supertest');
 import { createTestingApp, authenticateUser, authHeader } from '../src/data/services/test.service';
 
 
@@ -17,6 +18,16 @@ describe('Testes do Módulo Categoria (e2e)', () => {
     jest.setTimeout(10000);
     app = await createTestingApp();
     token = await authenticateUser(app);
+
+    // Cria uma nova categoria e captura o ID
+    const resposta = await request(app.getHttpServer())
+      .post('/categorias')
+      .set(authHeader(token))
+      .send({
+        tipo: 'E-Sports'
+      });
+    
+      categoriaId = resposta.body.id;
   });
 
   afterAll(async () => {
@@ -28,51 +39,53 @@ describe('Testes do Módulo Categoria (e2e)', () => {
       .post('/categorias')
       .set(authHeader(token))
       .send(categoria);
-    expect(resposta.status).toBe(201);
 
-    categoriaId = resposta.body.id;
+    expect(resposta.status).toBe(201);
   });
 
   it('02 - Deve Listar todas as Categorias', async () => {
-    return request(app.getHttpServer())
+   const resposta = await request(app.getHttpServer())
       .get('/categorias')
-      .set(authHeader(token))
-      .expect(200);
+      .set(authHeader(token));
+
+      expect(resposta.status).toBe(200);
   });
 
   it('03 - Deve Listar uma Categoria pelo ID', async () => {
-    return request(app.getHttpServer())
+    const resposta = await request(app.getHttpServer())
       .get(`/categorias/${categoriaId}`)
-      .set(authHeader(token))
-      .expect(200);
+      .set(authHeader(token));
+
+      expect(resposta.status).toBe(200);
   });
 
   it('04 - Deve Listar todas as Categorias pelo tipo', async () => {
-    return request(app.getHttpServer())
+    const resposta = await request(app.getHttpServer())
       .get(`/categorias/tipo/${categoria.tipo}`)
-      .set(authHeader(token))
-      .expect(200);
+      .set(authHeader(token));
+
+      expect(resposta.status).toBe(200);
   });
 
   it('05 - Deve Atualizar uma Categoria', async () => {
-    return request(app.getHttpServer())
+    const resposta = await request(app.getHttpServer())
       .put('/categorias')
       .set(authHeader(token))
       .send({
         id: categoriaId,
         tipo: 'Ação',
-      })
-      .expect(200)
-      .then(resposta => {
-        expect(resposta.body.tipo).toEqual('Ação');
       });
+
+      expect(resposta.status).toBe(200);
+      expect(resposta.body.tipo).toEqual('Ação');
   });
 
   it('06 - Deve Deletar uma Categoria', async () => {
-    return request(app.getHttpServer())
+   const resposta = await request(app.getHttpServer())
       .delete(`/categorias/${categoriaId}`)
-      .set(authHeader(token))
-      .expect(204);
+      .set(authHeader(token));
+
+      expect(resposta.status).toBe(204);
   });
 
 });
